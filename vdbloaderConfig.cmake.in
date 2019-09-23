@@ -1,0 +1,14 @@
+#
+#   vdbloader - Copyright (c) 2019 Hisanari Otsu
+#   Distributed under MIT license. See LICENSE file for details.
+#
+
+@PACKAGE_INIT@
+
+if (NOT TARGET vdbloader::vdbloader)
+    include(CMakeFindDependencyMacro)
+    find_dependency(OpenVDB REQUIRED)
+    find_dependency(IlmBase REQUIRED)
+    find_dependency(OpenEXR REQUIRED)
+    include(${CMAKE_CURRENT_LIST_DIR}/vdbloaderTargets.cmake)
+endif()
