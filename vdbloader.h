@@ -25,7 +25,7 @@
     #endif
 #endif
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 /*!
     \brief Error codes.
@@ -51,13 +51,13 @@ typedef void (*VDBLoaderErrorFunc)(void* user, int errorCode, const char* messag
 */
 VDBLOADER_PUBLIC_API void vdbloaderSetErrorFunc(void* user, VDBLoaderErrorFunc errorFun);
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 // Three tuple of floating point values
 struct VDBLoaderFloat3 {
-    float x;
-    float y;
-    float z;
+    double x;
+    double y;
+    double z;
 };
 
 // Bound
@@ -101,7 +101,7 @@ VDBLOADER_PUBLIC_API VDBLoaderBound vdbloaderGetBound(VDBLoaderContext context);
     \param context Context.
     \return Maximum scalar value in the grid.
 */
-VDBLOADER_PUBLIC_API float vbdloaderGetMaxScalar(VDBLoaderContext context);
+VDBLOADER_PUBLIC_API double vbdloaderGetMaxScalar(VDBLoaderContext context);
 
 /*!
     \brief Evaluate scalar at the give position.
@@ -109,4 +109,25 @@ VDBLOADER_PUBLIC_API float vbdloaderGetMaxScalar(VDBLoaderContext context);
     \param p Position.
     \return Evaluated value.
 */
-VDBLOADER_PUBLIC_API float vbdloaderEvalScalar(VDBLoaderContext context, VDBLoaderFloat3 p);
+VDBLOADER_PUBLIC_API double vbdloaderEvalScalar(VDBLoaderContext context, VDBLoaderFloat3 p);
+
+/*!
+    \brief Callback function for error reporting.
+    \param user User pointer.
+    \param t Distance from the ray origin.
+    \retval true Continue raymarching.
+    \retval false Abort raymarching.
+*/
+typedef bool (*VDBLoaderRaymarchFunc)(void* user, double t);
+
+/*!
+    \brief Raymarch the volume.
+    \param context Context.
+    \param o Ray origin.
+    \param d Ray direction.
+    \param tmin Lower bound of the valid range of the ray.
+    \param tmax Upper bound of the valid range of the ray.
+    \param user User pointer.
+    \param raymarchFunc Raymarching function.
+*/
+VDBLOADER_PUBLIC_API void vdbloaderMarchVolume(VDBLoaderContext context, VDBLoaderFloat3 o, VDBLoaderFloat3 d, double tmin, double tmax, double marchStep, void* user, VDBLoaderRaymarchFunc raymarchFunc);

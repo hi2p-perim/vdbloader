@@ -1,11 +1,11 @@
 vdbloader
 ====================
 
-This project provides a thin c-api wrapper for a part of features of OpenVDB required to support volume rendering in the renderer implementation. The main purpose of this project is to provide configuration-agnistic layer of OpenVDB in Windows environment.
+This project provides a thin c-api wrapper for a part of features of OpenVDB required to support volume rendering in the renderer implementation. The main purpose of this project is to provide configuration-agnistic layer of OpenVDB in Visual Studio environment.
 
 ## Build
 
-This library is intended to used in conda environment and dependencies must be installed by conda accordingly. Once you install dependencies, you can build the library with CMake command.
+This library is intended to be used in conda environment and dependencies must be installed by conda install command accordingly. Once you install dependencies, you can build the library with CMake command.
 
 ```bash
 $ conda install -c hi2p-perim openvdb

@@ -33,7 +33,7 @@
 #include <openvdb/tools/Prune.h>
 #pragma warning(pop)
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 // Specifies unused variables
 #define VDBLOADER_UNUSED(...) { (decltype(detail::unused(__VA_ARGS__)))0; }
@@ -79,10 +79,10 @@ public:
         Context::reportError(VDBLOADER_ERROR_UNKNOWN, "Unkonwn exception"); \
     }
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 namespace {
-VDBLoaderFloat3 toFloat3(const openvdb::math::Vec3<float>& v) {
+VDBLoaderFloat3 toFloat3(const openvdb::math::Vec3d& v) {
     return VDBLoaderFloat3{ v.x(), v.y(), v.z() };
 }
 VDBLoaderBound toBound(const openvdb::math::CoordBBox& b) {
@@ -93,7 +93,7 @@ VDBLoaderBound toLMBound(const openvdb::BBoxd& b) {
 }
 }
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 // Context holding states of vdbloader
 class Context {
@@ -171,20 +171,75 @@ public:
         return bound_;
     }
 
-    float getMaxScalar() const {
+    double getMaxScalar() const {
         return maxScalar_;
     }
 
-    float evalScalar(VDBLoaderFloat3 p) const {
+    double evalScalar(VDBLoaderFloat3 p) const {
         using SamplerT = openvdb::tools::GridSampler<GridT, openvdb::tools::BoxSampler>;
         SamplerT sampler(*grid_);
         return sampler.wsSample(openvdb::math::Vec3(p.x, p.y, p.z));
+    }
+
+    void marchVolume(VDBLoaderFloat3 o, VDBLoaderFloat3 d, double tmin, double tmax, double marchStep, void* user, VDBLoaderRaymarchFunc raymarchFunc) const {
+        // Ray in the world space
+        using RayT = openvdb::math::Ray<double>;
+        RayT vdbRay_world(
+            openvdb::math::Vec3d(o.x, o.y, o.z),
+            openvdb::math::Vec3d(d.x, d.y, d.z));
+        vdbRay_world.setTimes(tmin, tmax);
+
+        // Ray in the index space (volume space)
+        auto vdbRay_index = vdbRay_world.worldToIndex(*grid_);
+        
+        // Check intersection with the bound
+        const bool hit = vdbRay_index.clip(vdbBound_index_);
+        if (!hit) {
+            return;
+        }
+        auto tmax_index = vdbRay_index.t1();
+
+        // Scale to convert length between spaces
+        const auto length_indexToWorld = grid_->indexToWorld(vdbRay_index.dir()).length();
+
+        // Walk along the ray using DDA
+        using TimeSpanT = typename RayT::TimeSpan;
+        using TreeT = typename GridT::TreeType;
+        using AccessorT = typename openvdb::tree::ValueAccessor<const TreeT, false>;
+        constexpr int NodeLevel = TreeT::RootNodeType::ChildNodeType::LEVEL;
+        openvdb::math::VolumeHDDA<TreeT, RayT, NodeLevel> dda;
+        AccessorT accessor(grid_->constTree());
+        bool done = false;
+        while (!done) {
+            // Next span of the grid
+            const TimeSpanT ts = dda.march(vdbRay_index, accessor);
+            if (!ts.valid()) {
+                break;
+            }
+
+            // Convert the span in the world space
+            const auto t0_w = length_indexToWorld * ts.t0;
+            const auto t1_w = length_indexToWorld * ts.t1;
+
+            // March along the ray with marchStep
+            for (double t = marchStep * std::ceil(t0_w / marchStep); t <= t1_w; t += marchStep) {
+                // Position in the world space
+                const auto p = vdbRay_world(t);
+                if (!raymarchFunc(user, t)) {
+                    done = true;
+                    break;
+                }
+            }
+
+            // Next ray
+            vdbRay_index.setTimes(ts.t1 + openvdb::math::Delta<double>::value(), tmax_index);
+        }
     }
 };
 
 Context::ErrroFunc Context::errorFunc_;
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 
 VDBLOADER_PUBLIC_API void vdbloaderSetErrorFunc(void* user, VDBLoaderErrorFunc errorFunc) {
     Context::setErrorFunc(user, errorFunc);
@@ -216,16 +271,22 @@ VDBLOADER_PUBLIC_API VDBLoaderBound vdbloaderGetBound(VDBLoaderContext context) 
     return {};
 }
 
-VDBLOADER_PUBLIC_API float vbdloaderGetMaxScalar(VDBLoaderContext context) {
+VDBLOADER_PUBLIC_API double vbdloaderGetMaxScalar(VDBLoaderContext context) {
     VDBLOADER_BEGIN_CATCH_EXCEPTION(context);
     return reinterpret_cast<Context*>(context)->getMaxScalar();
     VDBLOADER_END_CATCH_EXCEPTION();
     return {};
 }
 
-VDBLOADER_PUBLIC_API float vbdloaderEvalScalar(VDBLoaderContext context, VDBLoaderFloat3 p) {
+VDBLOADER_PUBLIC_API double vbdloaderEvalScalar(VDBLoaderContext context, VDBLoaderFloat3 p) {
     VDBLOADER_BEGIN_CATCH_EXCEPTION(context);
     return reinterpret_cast<Context*>(context)->evalScalar(p);
     VDBLOADER_END_CATCH_EXCEPTION();
     return {};
+}
+
+VDBLOADER_PUBLIC_API void vdbloaderMarchVolume(VDBLoaderContext context, VDBLoaderFloat3 o, VDBLoaderFloat3 d, double tmin, double tmax, double marchStep, void* user, VDBLoaderRaymarchFunc raymarchFunc) {
+    VDBLOADER_BEGIN_CATCH_EXCEPTION(context);
+    return reinterpret_cast<Context*>(context)->marchVolume(o, d, tmin, tmax, marchStep, user, raymarchFunc);
+    VDBLOADER_END_CATCH_EXCEPTION();
 }
