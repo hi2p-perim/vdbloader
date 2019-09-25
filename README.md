@@ -1,7 +1,7 @@
 vdbloader
 ====================
 
-This project provides a thin c-api wrapper for a part of features of OpenVDB required to support volume rendering in the renderer implementation. The main purpose of this project is to provide configuration-agnistic layer of OpenVDB in Visual Studio environment.
+This project provides a thin c-api wrapper for a part of features of OpenVDB required to support volume rendering in the renderer implementation. The main purpose of this project is to provide configuration-agnostic layer of OpenVDB in Visual Studio environment.
 
 ## Build
 
