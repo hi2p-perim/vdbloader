@@ -65,7 +65,6 @@ target_compile_features(${_PROJECT_NAME} PRIVATE cxx_std_17)
 target_compile_options(${_PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /EHa>)
 set_target_properties(${_PROJECT_NAME} PROPERTIES PREFIX "")
 set_target_properties(${_PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "-debug")
-set_target_properties(${_PROJECT_NAME} PROPERTIES FOLDER "lm/lib")
 set_target_properties(${_PROJECT_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
