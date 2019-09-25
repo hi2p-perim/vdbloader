@@ -50,7 +50,7 @@ find_package(OpenEXR REQUIRED)
 set(_PROJECT_NAME vdbloader)
 add_library(${_PROJECT_NAME} SHARED "vdbloader.h" "vdbloader.cpp")
 add_library(vdbloader::vdbloader ALIAS ${_PROJECT_NAME})
-target_link_libraries(${_PROJECT_NAME} PUBLIC 
+target_link_libraries(${_PROJECT_NAME} PRIVATE 
     OpenVDB::openvdb
     OpenEXR::IlmImf
     IlmBase::IlmThread
