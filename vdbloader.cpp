@@ -56,7 +56,7 @@ public:
     ~vdbloader_error() = default;
 
 public:
-    const char* what() const {
+    const char* what() const noexcept {
         return message_.c_str();
     }
 
