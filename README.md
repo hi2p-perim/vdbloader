@@ -18,3 +18,9 @@ $ cmake -H. -B_build -G "Visual Studio 15 2017 Win64" -D CMAKE_INSTALL_PREFIX=./
 $ cmake --build _build --config Release --target install
 ```
 
+In Linux
+
+```bash
+$ cmake -H. -B_build -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=./dist
+$ cmake --build _build --target install
+```

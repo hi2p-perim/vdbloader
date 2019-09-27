@@ -21,16 +21,20 @@ option(VDBLOADER_INSTALL "Enable install" ${VDBLOADER_MASTER_PROJECT})
 # For CMAKE_INSTALL_*
 include(GNUInstallDirs)
 
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------
 
-# Normalize the path separator
-file(TO_CMAKE_PATH "$ENV{CONDA_PREFIX}" _CONDA_PREFIX)
+# If CONDA_PREFIX is not given from the command line,
+# try to find it from the environment variable.
+if (NOT CONDA_PREFIX)
+    # Normalize the path separator
+    file(TO_CMAKE_PATH "$ENV{CONDA_PREFIX}" CONDA_PREFIX)
+endif()
 
 # Conda prefix directory
 if (MSVC)
-    set(_CONDA_LIB_PREFIX "${_CONDA_PREFIX}/Library")
+    set(_CONDA_LIB_PREFIX "${CONDA_PREFIX}/Library")
 else()
-    set(_CONDA_LIB_PREFIX "${_CONDA_PREFIX}")
+    set(_CONDA_LIB_PREFIX "${CONDA_PREFIX}")
 endif()
 
 # Set module directory for find_package (incl. hints for transitive dependencies)
@@ -44,7 +48,7 @@ find_package(OpenVDB REQUIRED)
 find_package(IlmBase REQUIRED)
 find_package(OpenEXR REQUIRED)
 
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------
 
 # Create project
 set(_PROJECT_NAME vdbloader)
@@ -79,7 +83,7 @@ if (VDBLOADER_INSTALL)
     )
 endif()
 
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------
 
 # Install
 if (VDBLOADER_INSTALL)
